@@ -2482,7 +2482,7 @@ class RSFormProHelper
 				
 				$data['ADDITIONALATTRIBUTES2'] = $data['ADDITIONALATTRIBUTES'];
 				
-				$className = 'rsform-submit-button';
+				$className = 'rsform-submit-button btn btn-primary';
 				RSFormProHelper::addClass($data['ADDITIONALATTRIBUTES'], $className);
 				
 				$data['ADDITIONALATTRIBUTES3'] = $data['ADDITIONALATTRIBUTES'];
@@ -2509,7 +2509,7 @@ class RSFormProHelper
 					$out .= '<input type="submit" value="'.RSFormProHelper::htmlEscape($data['LABEL']).'" name="form['.$data['NAME'].']" id="'.$data['NAME'].'" '.$data['ADDITIONALATTRIBUTES'].' />';
 				if ($data['RESET']=='YES')
 				{
-					$className = 'rsform-reset-button';
+					$className = 'rsform-reset-button btn btn-link';
 					RSFormProHelper::addClass($data['ADDITIONALATTRIBUTES2'], $className);
 					
 					if ($button_type == 'button')
