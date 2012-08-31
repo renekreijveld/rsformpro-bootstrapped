@@ -9,8 +9,9 @@
 // no direct access
 defined( '_JEXEC' ) or die( 'Restricted access' );
 
-$out ='<h2>{global:formtitle}</h2>'."\n";
+$out = '<h2>{global:formtitle}</h2>'."\n";
 $out.='{error}'."\n";
+$out.='<fieldset>'."\n";
 
 $page_num = 0;
 if (!empty($pagefields))
@@ -18,7 +19,7 @@ if (!empty($pagefields))
 	$out .= "\t".'<!-- Do not remove this ID, it is used to identify the page so that the pagination script can work correctly -->'."\n";
 	$out .= "\t".'<div id="rsform_'.$formId.'_page_'.$page_num.'">'."\n";
 }
-
+	
 foreach ($quickfields as $quickfield)
 {
 	if (in_array($quickfield, $pagefields))
@@ -27,9 +28,9 @@ foreach ($quickfields as $quickfield)
 		$last_page  = $quickfield == end($pagefields);
 		$last_field = $quickfield == end($quickfields);
 		
-		$out.= "\t".'<div class="formField rsform-block rsform-block-'.JFilterOutput::stringURLSafe($quickfield).'">'."\n";
-		$out.= "\t{".$quickfield.":body}<br/>\n";
-		$out .= "\t".'</div>'."\n";
+		$out.= "\t".'<div class="control-group rsform-block-'.JFilterOutput::stringURLSafe($quickfield).'">'."\n";
+		$out.= "\t\t{".$quickfield.":body}\n";
+		$out.= "\t</div>\n";
 		
 		$out .= "\t".'</div>'."\n";
 		if (!$last_page || !$last_field)
@@ -42,13 +43,18 @@ foreach ($quickfields as $quickfield)
 	}
 	
 	$required = in_array($quickfield, $requiredfields) ? ' '.(isset($this->_form->Required) ? $this->_form->Required : '(*)') : "";
-	$out.= "<label>{".$quickfield.":caption}".$required."</label>\n";
-	$out.= "{".$quickfield.":body}\n";
-	$out.= "<span class=\"help-inline\">{".$quickfield.":description}</span>\n";
-	$out.= "<br/>{".$quickfield.":validation}\n";
+	$out.= "\t".'<div class="control-group rsform-block-'.JFilterOutput::stringURLSafe($quickfield).'">'."\n";
+	$out.= "\t<label class=\"control-label\" for=\"".$quickfield."\">{".$quickfield.":caption}".$required."</label>\n";
+	$out.= "\t<div class=\"controls\">\n";
+	$out.= "\t{".$quickfield.":body}&nbsp;{".$quickfield.":validation}\n";
+	$out.= "\t<span class=\"help-block\">{".$quickfield.":description}</span>\n";
+	$out.= "\t</div>\n";
+	$out.= "\t</div>\n";
 }
 if (!empty($pagefields))
 	$out .= "\t".'</div>'."\n";
+$out.= "</fieldset>\n";
+
 if ($out != $this->_form->FormLayout && $this->_form->FormId)
 {
 	// Clean it

@@ -60,13 +60,13 @@ defined('_JEXEC') or die('Restricted access');
 	<div class="rsform_layout_box">
 		<label for="formLayoutBootstrapVertical">
 			<input type="radio" id="formLayoutBootstrapVertical" name="FormLayoutName" value="bootstrap-vertical" onclick="saveLayoutName('<?php echo $this->form->FormId; ?>','bootstrap-vertical')" <?php if ($this->form->FormLayoutName == 'bootstrap-vertical') echo 'checked="checked"'; ?>/>Bootstrap Vertical<br/>
-			<img src="components/com_rsform/assets/images/layouts/2lines-xhtml.gif" width="175"/>
+			<img src="components/com_rsform/assets/images/layouts/bootstrap-vertical.gif" width="175"/>
 		</label>
 	</div>
 	<div class="rsform_layout_box">
 		<label for="formLayoutBootstrapHorizontal">
 			<input type="radio" id="formLayoutBootstrapHorizontal" name="FormLayoutName" value="bootstrap-horizontal" onclick="saveLayoutName('<?php echo $this->form->FormId; ?>','bootstrap-horizontal');" <?php if ($this->form->FormLayoutName == 'bootstrap-horizontal') echo 'checked="checked"'; ?> />Bootstrap Horizontal<br/>
-			<img src="components/com_rsform/assets/images/layouts/inline.gif" width="175"/>
+			<img src="components/com_rsform/assets/images/layouts/bootstrap-horizontal.gif" width="175"/>
 		</label>
 	</div>
 	<span class="rsform_clear_both"></span>
