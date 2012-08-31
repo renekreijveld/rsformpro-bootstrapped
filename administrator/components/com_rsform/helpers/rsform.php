@@ -17,7 +17,7 @@ DEFINE('_RSFORM_LICENSE','GPL Commercial License');
 DEFINE('_RSFORM_AUTHOR','<a href="http://www.rsjoomla.com" target="_blank">www.rsjoomla.com</a>');
 DEFINE('_RSFORM_WEBSITE','http://www.rsjoomla.com/');
 if(!defined('_RSFORM_REVISION'))
-	DEFINE('_RSFORM_REVISION','43');
+	DEFINE('_RSFORM_REVISION','44');
 
 JTable::addIncludePath(JPATH_ADMINISTRATOR.DS.'components'.DS.'com_rsform'.DS.'tables');
 
@@ -36,6 +36,19 @@ $GLOBALS['RSadapter'] = RSFormProHelper::getLegacyAdapter();
 function RSgetValidationRules()
 {
 	return RSFormProHelper::getValidationRules();
+}
+
+function _modifyResponsiveTemplate()
+{
+	$buffer = JResponse::getBody();
+	$buffer = trim($buffer);
+	
+	$line = reset(RSFormProHelper::explode($buffer));
+	if (strtolower($line) != '<!doctype html>')
+	{
+		$buffer = str_replace($line, '<!doctype html>', $buffer);
+		JResponse::setBody($buffer);
+	}
 }
 
 class RSFormProHelper
@@ -64,6 +77,14 @@ class RSFormProHelper
 		}
 		
 		return $compatible;
+	}
+	
+	function getDate($date)
+	{
+		if (RSFormProHelper::isJ16())
+			return JHTML::_('date', $date, 'Y-m-d H:i:s');
+		else
+			return JHTML::_('date', $date, '%Y-%m-%d %H:%M:%S');
 	}
 	
 	function getLegacyAdapter()
@@ -103,7 +124,7 @@ class RSFormProHelper
 	function checkValue($setvalue, $array)
 	{
 		if (!is_array($array))
-			$array = explode("\n", str_replace(array("\r\n", "\r"), "\n", $array));
+			$array = RSFormProHelper::explode($array);
 		
 		if (strlen($setvalue))
 			foreach ($array as $k => $v)
@@ -487,7 +508,7 @@ class RSFormProHelper
 	{
 		$RSadapter = RSFormProHelper::getLegacyAdapter();
 		
-		if (preg_match('/<code>/',$value))
+		if (strpos($value, '<code>') !== false)
 			return eval($value);
 		
 		return $value;
@@ -508,6 +529,8 @@ class RSFormProHelper
 		
 		//Trigger Event - rsfp_bk_onBeforeCreateComponentPreview
 		$mainframe->triggerEvent('rsfp_bk_onBeforeCreateComponentPreview',array(array('out'=>&$out,'formId'=>$formId,'componentId'=>$componentId,'ComponentTypeName'=>$r['ComponentTypeName'],'data'=>$data)));
+		
+		static $passedPageBreak;
 		
 		switch($r['ComponentTypeName'])
 		{
@@ -538,35 +561,34 @@ class RSFormProHelper
 				$items = str_replace(array("\r\n", "\r"), "\n", $items);
 				$items = explode("\n",$items);
 				
-				foreach($items as $item)
+				$special = array('[c]', '[g]', '[d]');
+				
+				foreach ($items as $item)
 				{
-					$buf=explode('|',$item, 2);
+					@list($val, $txt) = @explode('|', str_replace($special, '', $item), 2);
+					if (is_null($txt))
+						$txt = $val;
 					
-					if(preg_match('/\[g\]/',$item))
-					{
-						$out.='<optgroup label="'.RSFormProHelper::htmlEscape(str_replace('[g]', '', $item)).'">';
+					// <optgroup>
+					if (strpos($item, '[g]') !== false) {
+						$out .= '<optgroup label="'.RSFormProHelper::htmlEscape($val).'">';
 						continue;
 					}
-					if(preg_match('/\[\/g\]/',$item))
-					{
-						$out.='</optgroup>';
+					// </optgroup>
+					if(strpos($item, '[/g]') !== false) {
+						$out .= '</optgroup>';
 						continue;
 					}
 					
-					if(count($buf)==1)
-					{
-						if(preg_match('/\[c\]/',$buf[0]))
-							$out.='<option selected="selected">'.str_replace('[c]','',$buf[0]).'</option>';
-						else
-							$out.='<option value="'.RSFormProHelper::htmlEscape($buf[0]).'">'.$buf[0].'</option>';
-					}
-					if(count($buf)==2)
-					{
-						if(preg_match('/\[c\]/',$buf[1]))
-							$out.='<option selected="selected" value="'.RSFormProHelper::htmlEscape($buf[0]).'">'.str_replace('[c]','',$buf[1]).'</option>';
-						else
-							$out.='<option value="'.RSFormProHelper::htmlEscape($buf[0]).'">'.$buf[1].'</option>';
-					}
+					$additional = '';
+					// selected
+					if (strpos($item, '[c]') !== false)
+						$additional .= 'selected="selected"';
+					// disabled
+					if (strpos($item, '[d]') !== false)
+						$additional .= 'disabled="disabled"';
+					
+					$out .= '<option '.$additional.' value="'.RSFormProHelper::htmlEscape($val).'">'.RSFormProHelper::htmlEscape($txt).'</option>';
 				}
 				$out.='</select></td>';
 			}
@@ -577,36 +599,29 @@ class RSFormProHelper
 				$i=0;
 				
 				$out.='<td>'.$data['CAPTION'].'</td>';
+				$out.='<td>';
 				
 				$items = RSFormProHelper::isCode($data['ITEMS']);
 				$items = str_replace(array("\r\n", "\r"), "\n", $items);
 				$items = explode("\n",$items);
 				
-				$out.='<td>';
-				foreach($items as $item)
+				$special = array('[c]', '[d]');
+				
+				foreach ($items as $item)
 				{
-					$buf=explode("|",$item);
-					if(count($buf)==1)
-					{
-						if(preg_match('/\[c\]/',$buf[0]))
-						{
-							$v=str_replace('[c]','',$buf[0]);
-							$out.='<input checked="checked" type="checkbox" value="'.$v.'" id="'.$data['NAME'].$i.'"/><label for="'.$data['NAME'].$i.'">'.$v.'</label>';
-						}
-						else
-							$out.='<input type="checkbox" value="'.RSFormProHelper::htmlEscape($buf[0]).'" id="'.$data['NAME'].$i.'"/><label for="'.$data['NAME'].$i.'">'.$buf[0].'</label>';
-					}
-					if(count($buf)==2)
-					{
-						if(preg_match('/\[c\]/',$buf[1]))
-						{
-							$v=str_replace('[c]','',$buf[1]);
-							$out.='<input checked="checked" type="checkbox" value="'.RSFormProHelper::htmlEscape($buf[0]).'" id="'.$data['NAME'].$i.'"/><label for="'.$data['NAME'].$i.'">'.$v.'</label>';
-						}
-						else
-							$out.='<input type="checkbox" value="'.RSFormProHelper::htmlEscape($buf[0]).'" id="'.$data['NAME'].$i.'"/><label for="'.$data['NAME'].$i.'">'.$buf[1].'</label>';
-
-					}
+					@list($val, $txt) = @explode('|', str_replace($special, '', $item), 2);
+					if (is_null($txt))
+						$txt = $val;
+					
+					$additional = '';
+					// checked
+					if (strpos($item, '[c]') !== false)
+						$additional .= 'checked="checked"';
+					// disabled
+					if (strpos($item, '[d]') !== false)
+						$additional .= 'disabled="disabled"';
+					
+					$out.='<input type="checkbox" '.$additional.' value="'.RSFormProHelper::htmlEscape($val).'" id="'.$data['NAME'].$i.'"/><label for="'.$data['NAME'].$i.'">'.$txt.'</label>';
 					if($data['FLOW']=='VERTICAL') $out.='<br/>';
 					$i++;
 				}
@@ -620,37 +635,30 @@ class RSFormProHelper
 				$i=0;
 				
 				$out.='<td>'.$data['CAPTION'].'</td>';
+				$out.='<td>';
 				
 				$items = RSFormProHelper::isCode($data['ITEMS']);
 				$items = str_replace(array("\r\n", "\r"), "\n", $items);
 				$items = explode("\n",$items);
 				
-				$out.='<td>';
-				foreach($items as $item)
+				$special = array('[c]', '[d]');
+				
+				foreach ($items as $item)
 				{
-					$buf=explode("|",$item);
-					if(count($buf)==1)
-					{
-						if(preg_match('/\[c\]/',$buf[0]))
-						{
-							$v=str_replace('[c]','',$buf[0]);
-							$out.='<input checked="checked" type="radio" value="'.$v.'" id="'.$data['NAME'].$i.'"/><label for="'.$data['NAME'].$i.'">'.$v.'</label>';
-						}
-						else
-							$out.='<input type="radio" value="'.RSFormProHelper::htmlEscape($buf[0]).'" id="'.$data['NAME'].$i.'"/><label for="'.$data['NAME'].$i.'">'.$buf[0].'</label>';
-					}
-					if(count($buf)==2)
-					{
-						if(preg_match('/\[c\]/',$buf[1]))
-						{
-							$v=str_replace('[c]','',$buf[1]);
-							$out.='<input checked="checked" type="radio" value="'.$buf[0].'" id="'.$data['NAME'].$i.'"/><label for="'.$data['NAME'].$i.'">'.$v.'</label>';
-						}
-						else
-							$out.='<input type="radio" value="'.RSFormProHelper::htmlEscape($buf[0]).'" id="'.$data['NAME'].$i.'"/><label for="'.$data['NAME'].$i.'">'.$buf[1].'</label>';
-
-					}
-					if($data['FLOW']=='VERTICAL') $out.='<br/>';
+					@list($val, $txt) = @explode('|', str_replace($special, '', $item), 2);
+					if (is_null($txt))
+						$txt = $val;
+					
+					$additional = '';
+					// checked
+					if (strpos($item, '[c]') !== false)
+						$additional .= 'checked="checked"';
+					// disabled
+					if (strpos($item, '[d]') !== false)
+						$additional .= 'disabled="disabled"';
+					
+					$out.='<input type="radio" '.$additional.' value="'.RSFormProHelper::htmlEscape($val).'" id="'.$data['NAME'].$i.'"/><label for="'.$data['NAME'].$i.'">'.$txt.'</label>';
+					if ($data['FLOW']=='VERTICAL') $out.='<br/>';
 					$i++;
 				}
 				$out.='</td>';
@@ -757,7 +765,8 @@ class RSFormProHelper
 			
 			case 'pageBreak':
 				$out.='<td>&nbsp;</td>';
-				$out.='<td><input type="button" value="'.RSFormProHelper::htmlEscape($data['PREVBUTTON']).'" /> <input type="button" value="'.RSFormProHelper::htmlEscape($data['NEXTBUTTON']).'" /></td>';
+				$out.='<td>'.($passedPageBreak ? '<input type="button" value="'.RSFormProHelper::htmlEscape($data['PREVBUTTON']).'" />' : '').' <input type="button" value="'.RSFormProHelper::htmlEscape($data['NEXTBUTTON']).'" /></td>';
+				$passedPageBreak = true;
 			break;
 			
 			case 'rseprotickets':
@@ -1014,8 +1023,7 @@ class RSFormProHelper
             {
                 $value = $submission->values[$property['NAME']];
                 $placeholders[] = '{'.$property['NAME'].':text}';
-				$property['ITEMS'] = RSFormProHelper::isCode($property['ITEMS']);
-                $items = explode("\n", str_replace(array("\r\n", "\r"), "\n", $property['ITEMS']));
+				$items = RSFormProHelper::explode(RSFormProHelper::isCode($property['ITEMS']));
                 foreach ($items as $item)
                 {
                     @list($item_val, $item_text) = explode("|", $item, 2);
@@ -1063,6 +1071,8 @@ class RSFormProHelper
 			array_push($placeholders, '{global:username}', '{global:userid}', '{global:useremail}', '{global:fullname}', '{global:userip}', '{global:date_added}', '{global:sitename}', '{global:siteurl}','{global:confirmation}','{global:submissionid}', '{global:submission_id}');
 			array_push($values, $user->username, $user->id, $user->email, $user->name, isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '', $submission->DateSubmitted, $config->getValue('config.sitename'), JURI::root(),$confirmation, $submission->SubmissionId, $submission->SubmissionId);
 		}
+		
+		$mainframe->triggerEvent('rsfp_onAfterCreatePlaceholders', array(array('form' => &$form, 'placeholders' => &$placeholders, 'values' => &$values, 'submission' => $submission)));
 		
 		if ($only_return_replacements)
 			return array($placeholders, $values);
@@ -1342,7 +1352,7 @@ class RSFormProHelper
 		$db = JFactory::getDBO();
 		$doc =& JFactory::getDocument();
 		
-		$db->setQuery("SELECT `FormId`, `FormLayout`, `ScriptDisplay`, `ErrorMessage`, `FormTitle`, `CSS`, `JS`, `CSSClass`, `CSSId`, `CSSName`, `CSSAction`, `CSSAdditionalAttributes`, `AjaxValidation`, `ThemeParams` FROM #__rsform_forms WHERE FormId='".$formId."' AND `Published`='1'");
+		$db->setQuery("SELECT `FormId`, `FormLayoutName`, `FormLayout`, `ScriptDisplay`, `ErrorMessage`, `FormTitle`, `CSS`, `JS`, `CSSClass`, `CSSId`, `CSSName`, `CSSAction`, `CSSAdditionalAttributes`, `AjaxValidation`, `ThemeParams` FROM #__rsform_forms WHERE FormId='".$formId."' AND `Published`='1'");
 		$form = $db->loadObject();
 		
 		$lang 		  = RSFormProHelper::getCurrentLanguage();
@@ -1510,9 +1520,27 @@ class RSFormProHelper
 		
 		$formLayout.= '<input type="hidden" name="form[formId]" value="'.$formId.'"/>';
 		
-		$CSSClass 	= $form->CSSClass ? ' class="'.RSFormProHelper::htmlEscape($form->CSSClass).'"' : '';
-		$CSSId 		= $form->CSSId ? ' id="'.RSFormProHelper::htmlEscape($form->CSSId).'"' : '';
-		$CSSName 	= $form->CSSName ? ' name="'.RSFormProHelper::htmlEscape($form->CSSName).'"' : '';
+		if ($form->FormLayoutName == 'responsive')
+		{
+			$form->CSSClass .= ' formResponsive';
+			if (RSFormProHelper::getConfig('auto_responsive'))
+			{
+				$doc->addCustomTag('<meta name="viewport" content="width=device-width, initial-scale=1.0">');
+				$mainframe->registerEvent('onAfterRender', '_modifyResponsiveTemplate');
+			}
+		}
+		if ($form->FormLayoutName == 'bootstrap-horizontal')
+		{
+			$form->CSSClass .= ' form-horizontal';
+		}
+		if ($form->FormLayoutName == 'bootstrap-vertical')
+		{
+			$form->CSSClass .= ' form-vertical';
+		}
+		
+		$CSSClass 	= $form->CSSClass ? ' class="'.RSFormProHelper::htmlEscape(trim($form->CSSClass)).'"' : '';
+		$CSSId 		= $form->CSSId ? ' id="'.RSFormProHelper::htmlEscape(trim($form->CSSId)).'"' : '';
+		$CSSName 	= $form->CSSName ? ' name="'.RSFormProHelper::htmlEscape(trim($form->CSSName)).'"' : '';
 		$u 			= $form->CSSAction ? RSFormProHelper::htmlEscape($form->CSSAction) : $u;
 		$CSSAdditionalAttributes = $form->CSSAdditionalAttributes ? ' '.trim($form->CSSAdditionalAttributes) : '';
 		
@@ -1716,7 +1744,8 @@ class RSFormProHelper
 			$confirmsubmission = $form->ConfirmSubmission ? 0 : 1;
 			
 			// Add to db (submission)
-			$db->setQuery("INSERT INTO #__rsform_submissions SET `FormId`='".$formId."', `DateSubmitted`=NOW(), `UserIp`='".(isset($_SERVER['REMOTE_ADDR']) ? $db->getEscaped($_SERVER['REMOTE_ADDR']) : '')."', `Username`='".$db->getEscaped($user->get('username'))."', `UserId`='".(int) $user->get('id')."', `Lang`='".RSFormProHelper::getCurrentLanguage()."', `confirmed` = '".$confirmsubmission."' ");
+			$date = JFactory::getDate();
+			$db->setQuery("INSERT INTO #__rsform_submissions SET `FormId`='".$formId."', `DateSubmitted`='".$date->toMySQL()."', `UserIp`='".(isset($_SERVER['REMOTE_ADDR']) ? $db->getEscaped($_SERVER['REMOTE_ADDR']) : '')."', `Username`='".$db->getEscaped($user->get('username'))."', `UserId`='".(int) $user->get('id')."', `Lang`='".RSFormProHelper::getCurrentLanguage()."', `confirmed` = '".$confirmsubmission."' ");
 			$db->query();
 			
 			$SubmissionId = $db->insertid();
@@ -1827,17 +1856,20 @@ class RSFormProHelper
 					$continueButton = '<br/><input type="button" class="rsform-submit-button" name="continue" value="'.JText::_('RSFP_THANKYOU_BUTTON').'" onclick="'.$goto.'"/>';
 			}
 			
+			// get mappings data
+			$db->setQuery("SELECT * FROM #__rsform_mappings WHERE formId = ".(int) $formId." ORDER BY ordering ASC");
+			$mappings = $db->loadObjectList();
+			
+			// get Post to another location
+			$db->setQuery("SELECT * FROM #__rsform_posts WHERE form_id='".(int) $formId."' AND enabled='1'");
+			$silentPost = $db->loadObject();
+			
 			$RSadapter = RSFormProHelper::getLegacyAdapter();
 			eval($form->ScriptProcess2);
 			
 			$thankYouMessage .= $continueButton;
 			
 			//Mappings
-			
-			//get mappings data
-			$db->setQuery("SELECT * FROM #__rsform_mappings WHERE formId = ".(int) $formId." ORDER BY ordering ASC ");
-			$mappings = $db->loadObjectList();
-			
 			if (!empty($mappings))
 			{
 				$lastinsertid = '';
@@ -1888,6 +1920,68 @@ class RSFormProHelper
 				$db->query();
 				$db->setQuery("DELETE FROM #__rsform_submissions WHERE SubmissionId = ".(int) $SubmissionId." ");
 				$db->query();
+			}
+			
+			if ($silentPost && !empty($silentPost->url) && $silentPost->url != 'http://')
+			{
+				// url
+				$url = $silentPost->url;
+				// set the variables to be sent
+				// the format of the variables is var1=value1&var2=value2&var3=value3
+				$data = array();
+				foreach ($post as $key => $value)
+				{
+					if (is_array($value))
+						foreach ($value as $post2 => $value2)
+							$data[] = urlencode($key).'[]='.urlencode($value2);
+					else
+						$data[] = urlencode($key).'='.urlencode($value);
+				}
+				// do we need to post silently?
+				if ($silentPost->silent)
+				{
+					$data = implode('&', $data);
+					$params = array(
+						'method' => $silentPost->method ? 'POST' : 'GET'
+					);
+					require_once dirname(__FILE__).'/connect.php';
+					RSFormProConnect($url, $data, $params);
+				}
+				else
+				{
+					// just try to redirect
+					if ($silentPost->method)
+					{
+						@ob_end_clean();
+						
+						// create form
+						$output = array();
+						$output[] = '<form id="formSubmit" method="POST" action="'.RSFormProHelper::htmlEscape($url).'">';
+						foreach ($post as $key => $value)
+						{
+							if (is_array($value))
+								foreach ($value as $post2 => $value2)
+									$output[] = '<input type="hidden" name="'.RSFormProHelper::htmlEscape($key).'[]" value="'.RSFormProHelper::htmlEscape($value2).'" />';
+							else
+								$output[] = '<input type="hidden" name="'.RSFormProHelper::htmlEscape($key).'[]" value="'.RSFormProHelper::htmlEscape($value).'" />';
+						}
+						$output[] = '</form>';
+						$output[] = '<script type="text/javascript">';
+						$output[] = 'function formSubmit() { document.getElementById(\'formSubmit\').submit(); }';
+						$output[] = 'try { window.addEventListener ? window.addEventListener("load",formSubmit,false) : window.attachEvent("onload",formSubmit); }';
+						$output[] = 'catch (err) { formSubmit(); }';
+						$output[] = '</script>';
+						
+						// echo form and submit it
+						echo implode("\r\n", $output);
+						die();
+					}
+					else
+					{
+						$data = implode('&', $data);
+						$mainframe->redirect($url.(strpos($url, '?') === false ? '?' : '&').$data);
+					}
+				}
 			}
 			
 			//Trigger - After form process
@@ -2158,7 +2252,7 @@ class RSFormProHelper
 		$out = '';
 		
 		//Trigger Event - rsfp_bk_onBeforeCreateFrontComponentBody
-		$mainframe->triggerEvent('rsfp_bk_onBeforeCreateFrontComponentBody',array(array('out'=>&$out, 'formId'=>$formId, 'componentId'=>$componentId,'data'=>$data,'value'=>$value)));
+		$mainframe->triggerEvent('rsfp_bk_onBeforeCreateFrontComponentBody',array(array('out'=>&$out, 'formId'=>$formId, 'componentId'=>$componentId,'data'=>&$data,'value'=>&$value)));
 		
 		switch($data['ComponentTypeName'])
 		{
@@ -2200,36 +2294,36 @@ class RSFormProHelper
 				
 				$out .= '<select '.($data['MULTIPLE']=='YES' ? 'multiple="multiple"' : '').' name="form['.$data['NAME'].'][]" '.((int) $data['SIZE'] > 0 ? 'size="'.(int) $data['SIZE'].'"' : '').' id="'.$data['NAME'].'" '.$data['ADDITIONALATTRIBUTES'].' >';
 				
-				$items = RSFormProHelper::isCode($data['ITEMS']);
-				$items = str_replace(array("\r\n", "\r"), "\n", $items);
-				$items = explode("\n", $items);
+				$items = RSFormProHelper::explode(RSFormProHelper::isCode($data['ITEMS']));
+				
+				$special = array('[c]', '[g]', '[d]');
+				
 				foreach ($items as $item)
 				{
-					$buf = explode('|',$item,2);
+					@list($val, $txt) = @explode('|', str_replace($special, '', $item), 2);
+					if (is_null($txt))
+						$txt = $val;
 					
-					if(preg_match('/\[g\]/',$item))
-					{
-						$out.='<optgroup label="'.RSFormProHelper::htmlEscape(str_replace('[g]', '', $item)).'">';
+					// <optgroup>
+					if (strpos($item, '[g]') !== false) {
+						$out .= '<optgroup label="'.RSFormProHelper::htmlEscape($val).'">';
 						continue;
 					}
-					if(preg_match('/\[\/g\]/',$item))
-					{
-						$out.='</optgroup>';
+					// </optgroup>
+					if(strpos($item, '[/g]') !== false) {
+						$out .= '</optgroup>';
 						continue;
 					}
 					
-					$option_value = $buf[0];
-					$option_value_trimmed = str_replace('[c]','',$option_value);
-					$option_shown = count($buf) == 1 ? $buf[0] : $buf[1];
-					$option_shown_trimmed = str_replace('[c]','',$option_shown);
+					$additional = '';
+					// selected
+					if ((strpos($item, '[c]') !== false && empty($value)) || (isset($value[$data['NAME']]) && in_array($val, $value[$data['NAME']])))
+						$additional .= 'selected="selected"';
+					// disabled
+					if (strpos($item, '[d]') !== false)
+						$additional .= 'disabled="disabled"';
 					
-					$option_checked = false;
-					if (empty($value) && preg_match('/\[c\]/',$option_shown))
-						$option_checked = true;
-					if (isset($value[$data['NAME']]) && in_array($option_value_trimmed, $value[$data['NAME']]))
-						$option_checked = true;
-					
-					$out .= '<option '.($option_checked ? 'selected="selected"' : '').' value="'.RSFormProHelper::htmlEscape($option_value_trimmed).'">'.RSFormProHelper::htmlEscape($option_shown_trimmed).'</option>';
+					$out .= '<option '.$additional.' value="'.RSFormProHelper::htmlEscape($val).'">'.RSFormProHelper::htmlEscape($txt).'</option>';
 				}
 				$out .= '</select>';
 				
@@ -2258,29 +2352,25 @@ class RSFormProHelper
 			case 'checkboxGroup':
 				$i = 0;
 				
-				$items = RSFormProHelper::isCode($data['ITEMS']);
-				$items = str_replace(array("\r\n", "\r"), "\n", $items);
-				$items = explode("\n", $items);
+				$items = RSFormProHelper::explode(RSFormProHelper::isCode($data['ITEMS']));
+				
+				$special = array('[c]', '[d]');
+				
 				foreach ($items as $item)
 				{
-					$buf = explode('|',$item,2);
+					@list($val, $txt) = @explode('|', str_replace($special, '', $item), 2);
+					if (is_null($txt))
+						$txt = $val;
 					
-					$option_value = $buf[0];
-					$option_value_trimmed = str_replace('[c]','',$option_value);
-					$option_shown = count($buf) == 1 ? $buf[0] : $buf[1];
-					$option_shown_trimmed = str_replace('[c]','',$option_shown);
-					
-					$option_checked = false;
-					if (empty($value) && preg_match('/\[c\]/',$option_shown))
-						$option_checked = true;
-					if (isset($value[$data['NAME']]) && in_array($option_value_trimmed, $value[$data['NAME']]))
-						$option_checked = true;
-					
-					$out .= '<label class="checkbox"><input '.($option_checked ? 'checked="checked"' : '').' name="form['.$data['NAME'].'][]" type="checkbox" value="'.RSFormProHelper::htmlEscape($option_value_trimmed).'" id="'.$data['NAME'].$i.'" '.$data['ADDITIONALATTRIBUTES'].' />'.$option_shown_trimmed.'</label>';
-					
-					if ($data['FLOW']=='VERTICAL')
-						$out.='<br/>';
+					$additional = '';
+					// checked
+					if ((strpos($item, '[c]') !== false && empty($value)) || (isset($value[$data['NAME']]) && in_array($val, $value[$data['NAME']])))
+						$additional .= 'checked="checked"';
+					// disabled
+					if (strpos($item, '[d]') !== false)
+						$additional .= 'disabled="disabled"';
 						
+					$out .= '<label class="checkbox'.($data['FLOW']=='VERTICAL' ? '"' : ' inline"').'><input '.$additional.' name="form['.$data['NAME'].'][]" type="checkbox" value="'.RSFormProHelper::htmlEscape($val).'" id="'.$data['NAME'].$i.'" '.$data['ADDITIONALATTRIBUTES'].' />'.$txt.'</label>';
 					$i++;
 				}
 			break;
@@ -2289,28 +2379,25 @@ class RSFormProHelper
 			case 'radioGroup':
 				$i = 0;
 				
-				$items = RSFormProHelper::isCode($data['ITEMS']);
-				$items = str_replace(array("\r\n", "\r"), "\n", $items);
-				$items = explode("\n", $items);
+				$items = RSFormProHelper::explode(RSFormProHelper::isCode($data['ITEMS']));
+				
+				$special = array('[c]', '[d]');
+				
 				foreach ($items as $item)
 				{
-					$buf = explode('|',$item,2);
+					@list($val, $txt) = @explode('|', str_replace($special, '', $item), 2);
+					if (is_null($txt))
+						$txt = $val;
+						
+					$additional = '';
+					// checked
+					if ((strpos($item, '[c]') !== false && empty($value)) || (isset($value[$data['NAME']]) && $val == $value[$data['NAME']]))
+						$additional .= 'checked="checked"';
+					// disabled
+					if (strpos($item, '[d]') !== false)
+						$additional .= 'disabled="disabled"';
 					
-					$option_value = $buf[0];
-					$option_value_trimmed = str_replace('[c]','',$option_value);
-					$option_shown = count($buf) == 1 ? $buf[0] : $buf[1];
-					$option_shown_trimmed = str_replace('[c]','',$option_shown);
-					
-					$option_checked = false;
-					if (empty($value) && preg_match('/\[c\]/',$option_shown))
-						$option_checked = true;
-					if (isset($value[$data['NAME']]) && $value[$data['NAME']] == $option_value_trimmed)
-						$option_checked = true;
-					
-					$out .= '<label class="radio"><input '.($option_checked ? 'checked="checked"' : '').' name="form['.$data['NAME'].']" type="radio" value="'.RSFormProHelper::htmlEscape($option_value_trimmed).'" id="'.$data['NAME'].$i.'" '.$data['ADDITIONALATTRIBUTES'].' />'.$option_shown_trimmed.'</label>';
-					
-					if ($data['FLOW']=='VERTICAL')
-						$out.='<br/>';
+					$out .= '<label class="radio'.($data['FLOW']=='VERTICAL' ? '"' : ' inline"').'><input '.$additional.' name="form['.$data['NAME'].']" type="radio" value="'.RSFormProHelper::htmlEscape($val).'" id="'.$data['NAME'].$i.'" '.$data['ADDITIONALATTRIBUTES'].' />'.$txt.'</label>';
 					$i++;
 				}
 			break;
@@ -2348,7 +2435,7 @@ class RSFormProHelper
 						if ($invalid)
 							$className .= ' rsform-error';
 						
-						$out .= '<button id="btn'.$formId.'_'.$calendars[$componentId].'" type="button" onclick="showHideCalendar(\'cal'.$formId.'_'.$calendars[$componentId].'Container\');" class="btnCal '.$className.'" '.$data['ADDITIONALATTRIBUTES2'].' >'.RSFormProHelper::htmlEscape($data['POPUPLABEL']).'</button>';
+						$out .= '<input id="btn'.$formId.'_'.$calendars[$componentId].'" type="button" value="'.RSFormProHelper::htmlEscape($data['POPUPLABEL']).'" onclick="showHideCalendar(\'cal'.$formId.'_'.$calendars[$componentId].'Container\');" class="'.$className.'" '.$data['ADDITIONALATTRIBUTES2'].' />';
 						$out .= '</div>';
 						$out .= '<div id="cal'.$formId.'_'.$calendars[$componentId].'Container" style="clear:both;display:none;position:absolute;z-index:'.(9999-$data['Order']).'"></div>';
 					break;
@@ -2362,7 +2449,7 @@ class RSFormProHelper
 				$button_type = (isset($data['BUTTONTYPE']) && $data['BUTTONTYPE'] == 'TYPEBUTTON') ? 'button' : 'input';
 				$data['ADDITIONALATTRIBUTES2'] = $data['ADDITIONALATTRIBUTES'];
 				
-				$className = 'rsform-button';
+				$className = 'rsform-button btn';
 				if ($invalid)
 					$className .= ' rsform-error';
 				RSFormProHelper::addClass($data['ADDITIONALATTRIBUTES'], $className);
@@ -2484,7 +2571,7 @@ class RSFormProHelper
 				
 				$data['ADDITIONALATTRIBUTES2'] = $data['ADDITIONALATTRIBUTES'];
 				
-				$className = 'rsform-submit-button btn btn-primary';
+				$className = 'rsform-submit-button btn';
 				RSFormProHelper::addClass($data['ADDITIONALATTRIBUTES'], $className);
 				
 				$data['ADDITIONALATTRIBUTES3'] = $data['ADDITIONALATTRIBUTES'];
@@ -2511,7 +2598,7 @@ class RSFormProHelper
 					$out .= '<input type="submit" value="'.RSFormProHelper::htmlEscape($data['LABEL']).'" name="form['.$data['NAME'].']" id="'.$data['NAME'].'" '.$data['ADDITIONALATTRIBUTES'].' />';
 				if ($data['RESET']=='YES')
 				{
-					$className = 'rsform-reset-button btn btn-link';
+					$className = 'rsform-reset-button btn';
 					RSFormProHelper::addClass($data['ADDITIONALATTRIBUTES2'], $className);
 					
 					if ($button_type == 'button')
@@ -2546,7 +2633,7 @@ class RSFormProHelper
 				if (isset($data['VALIDATENEXTPAGE']) && $data['VALIDATENEXTPAGE'] == 'YES')
 					$validate = 'true';
 				
-				$className = 'rsform-button';
+				$className = 'rsform-button btn';
 				if ($invalid)
 					$className .= ' rsform-error';
 				RSFormProHelper::addClass($data['ADDITIONALATTRIBUTES'], $className);
@@ -2591,37 +2678,34 @@ class RSFormProHelper
 					RSFormProHelper::addClass($data['ADDITIONALATTRIBUTES'], $className);
 					
 					$html .= '<select name="form['.$data['NAME'].']" id="'.$data['NAME'].'" '.$data['ADDITIONALATTRIBUTES'].' >';
-					
-					$items = RSFormProHelper::isCode($data['ITEMS']);
-					$items = str_replace(array("\r\n", "\r"), "\n", $items);
-					$items = explode("\n", $items);
+					$items = RSFormProHelper::explode(RSFormProHelper::isCode($data['ITEMS']));
+					$special = array('[c]', '[g]', '[d]');
 					foreach ($items as $item)
 					{
-						$buf = explode('|',$item,2);
-						
-						if(preg_match('/\[g\]/',$item))
-						{
-							$html.='<optgroup label="'.RSFormProHelper::htmlEscape(str_replace('[g]', '', $item)).'">';
+						@list($val, $txt) = @explode('|', str_replace($special, '', $item), 2);
+						if (is_null($txt))
+							$txt = $val;
+							
+						// <optgroup>
+						if (strpos($item, '[g]') !== false) {
+							$out .= '<optgroup label="'.RSFormProHelper::htmlEscape($val).'">';
 							continue;
 						}
-						if(preg_match('/\[\/g\]/',$item))
-						{
-							$html.='</optgroup>';
+						// </optgroup>
+						if(strpos($item, '[/g]') !== false) {
+							$out .= '</optgroup>';
 							continue;
 						}
 						
-						$option_value = $buf[0];
-						$option_value_trimmed = str_replace('[c]','',$option_value);
-						$option_shown = count($buf) == 1 ? $buf[0] : $buf[1];
-						$option_shown_trimmed = str_replace('[c]','',$option_shown);
+						$additional = '';
+						// selected
+						if ((strpos($item, '[c]') !== false && empty($value)) || (isset($value[$data['NAME']]) && $val == $value[$data['NAME']]))
+							$additional .= 'selected="selected"';
+						// disabled
+						if (strpos($item, '[d]') !== false)
+							$additional .= 'disabled="disabled"';
 						
-						$option_checked = false;
-						if (empty($value) && preg_match('/\[c\]/',$option_shown))
-							$option_checked = true;
-						if (isset($value[$data['NAME']]) && $option_value_trimmed == $value[$data['NAME']])
-							$option_checked = true;
-						
-						$html .= '<option '.($option_checked ? 'selected="selected"' : '').' value="'.RSFormProHelper::htmlEscape($option_value_trimmed).'">'.RSFormProHelper::htmlEscape($option_shown_trimmed).'</option>';
+						$html .= '<option '.$additional.' value="'.RSFormProHelper::htmlEscape($val).'">'.RSFormProHelper::htmlEscape($txt).'</option>';
 					}
 					$html .= '</select>';
 					
@@ -2914,7 +2998,7 @@ class RSFormProHelper
 				$html .= '<td>&nbsp;</td>';
 				$html .= '<td>&nbsp;</td>';
 			}
-			$html .= '<td align="right"><button type="submit">'.JText::_('SAVE').'</button></td>';
+			$html .= '<td align="right"><button class="rs_button" type="submit">'.JText::_('SAVE').'</button></td>';
 			$html .= '</tr>';
 		}
 		
@@ -2938,9 +3022,9 @@ class RSFormProHelper
 			if ($method == 'where')
 				$html .= '<td>'.JHTML::_('select.genericlist',  $operators, 'o_'.$column, 'class="inputbox"', 'value', 'text',$op).'</td>';
 			if (strpos($type, 'text') !== false)
-				$html .= '<td><textarea onclick="toggleDropdown(this,returnMappingsExtra());" onkeydown="closeAllDropdowns();" style="width:300px; height: 200px;" id="'.RSFormProHelper::htmlEscape($name).'" name="'.RSFormProHelper::htmlEscape($name).'">'.RSFormProHelper::htmlEscape($value).'</textarea></td>';
+				$html .= '<td><textarea class="rs_textarea" onclick="toggleDropdown(this,returnMappingsExtra());" onkeydown="closeAllDropdowns();" style="width:300px; height: 200px;" id="'.RSFormProHelper::htmlEscape($name).'" name="'.RSFormProHelper::htmlEscape($name).'">'.RSFormProHelper::htmlEscape($value).'</textarea></td>';
 			else
-				$html .= '<td><input onclick="toggleDropdown(this,returnMappingsExtra());" onkeydown="closeAllDropdowns();" style="width:300px;" size="35" value="'.RSFormProHelper::htmlEscape($value).'" id="'.RSFormProHelper::htmlEscape($name).'" name="'.RSFormProHelper::htmlEscape($name).'"></td>';
+				$html .= '<td><input type="text" class="rs_inp rs_80" onclick="toggleDropdown(this,returnMappingsExtra());" onkeydown="closeAllDropdowns();" size="35" value="'.RSFormProHelper::htmlEscape($value).'" id="'.RSFormProHelper::htmlEscape($name).'" name="'.RSFormProHelper::htmlEscape($name).'"></td>';
 			if ($method == 'where')
 			$html .= '<td>'.JHTML::_('select.booleanlist', 'c_'.$column, 'class="inputbox"', $op2,'RSFP_OR','RSFP_AND').'</td>';
 			$html .= '</tr>';
@@ -2955,7 +3039,7 @@ class RSFormProHelper
 				$html .= '<td>&nbsp;</td>';
 				$html .= '<td>&nbsp;</td>';
 			}
-			$html .= '<td align="right"><button type="submit">'.JText::_('SAVE').'</button></td>';
+			$html .= '<td align="right"><button class="rs_button" type="submit">'.JText::_('SAVE').'</button></td>';
 			$html .= '</tr>';
 		}
 		
@@ -3088,4 +3172,3 @@ class RSFormProHelper
 		return $mail->Send();
 	}
 }
-?>

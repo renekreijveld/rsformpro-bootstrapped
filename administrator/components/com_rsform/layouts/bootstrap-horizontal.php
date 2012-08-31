@@ -8,7 +8,7 @@
 
 // no direct access
 defined( '_JEXEC' ) or die( 'Restricted access' );
-	
+
 $out = '<h2>{global:formtitle}</h2>'."\n";
 $out.='{error}'."\n";
 $out.='<fieldset>'."\n";
@@ -32,11 +32,11 @@ foreach ($quickfields as $quickfield)
 		$out.= "\t\t{".$quickfield.":body}\n";
 		$out.= "\t</div>\n";
 		
-		$out .= "\t".'</tbody>'."\n";
+		$out .= "\t".'</div>'."\n";
 		if (!$last_page || !$last_field)
 		{
 			$out .= '<!-- Do not remove this ID, it is used to identify the page so that the pagination script can work correctly -->'."\n";
-			$out .= "\t".'<tbody id="rsform_'.$formId.'_page_'.$page_num.'">'."\n";
+			$out .= "\t".'<div id="rsform_'.$formId.'_page_'.$page_num.'">'."\n";
 		}
 			
 		continue;
