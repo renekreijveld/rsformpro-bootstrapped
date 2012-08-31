@@ -45,7 +45,7 @@ foreach ($quickfields as $quickfield)
 	$out.= "<label>{".$quickfield.":caption}".$required."</label>\n";
 	$out.= "{".$quickfield.":body}\n";
 	$out.= "<span class=\"help-inline\">{".$quickfield.":description}</span>\n";
-	$out.= "{".$quickfield.":validation}\n";
+	$out.= "<br/>{".$quickfield.":validation}\n";
 }
 if (!empty($pagefields))
 	$out .= "\t".'</div>'."\n";
