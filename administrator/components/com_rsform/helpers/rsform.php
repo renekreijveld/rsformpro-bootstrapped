@@ -2435,7 +2435,7 @@ class RSFormProHelper
 						if ($invalid)
 							$className .= ' rsform-error';
 						
-						$out .= '<input id="btn'.$formId.'_'.$calendars[$componentId].'" type="button" value="'.RSFormProHelper::htmlEscape($data['POPUPLABEL']).'" onclick="showHideCalendar(\'cal'.$formId.'_'.$calendars[$componentId].'Container\');" class="'.$className.'" '.$data['ADDITIONALATTRIBUTES2'].' />';
+						$out .= '<button id="btn'.$formId.'_'.$calendars[$componentId].'" type="button" onclick="showHideCalendar(\'cal'.$formId.'_'.$calendars[$componentId].'Container\');" class="btnCal '.$className.'" '.$data['ADDITIONALATTRIBUTES2'].' >'.RSFormProHelper::htmlEscape($data['POPUPLABEL']).'</button>';
 						$out .= '</div>';
 						$out .= '<div id="cal'.$formId.'_'.$calendars[$componentId].'Container" style="clear:both;display:none;position:absolute;z-index:'.(9999-$data['Order']).'"></div>';
 					break;
