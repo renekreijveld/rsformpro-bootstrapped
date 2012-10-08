@@ -28,7 +28,7 @@ foreach ($quickfields as $quickfield)
 		$last_page  = $quickfield == end($pagefields);
 		$last_field = $quickfield == end($quickfields);
 		
-		$out.= "\t".'<div class="control-group rsform-block-'.JFilterOutput::stringURLSafe($quickfield).'">'."\n";
+		$out.= "\t".'<div class="control-group rsform-block rsform-block-'.JFilterOutput::stringURLSafe($quickfield).'">'."\n";
 		$out.= "\t\t{".$quickfield.":body}\n";
 		$out.= "\t</div>\n";
 		
@@ -43,7 +43,7 @@ foreach ($quickfields as $quickfield)
 	}
 	
 	$required = in_array($quickfield, $requiredfields) ? ' '.(isset($this->_form->Required) ? $this->_form->Required : '(*)') : "";
-	$out.= "\t".'<div class="control-group rsform-block-'.JFilterOutput::stringURLSafe($quickfield).'">'."\n";
+	$out.= "\t".'<div class="control-group rsform-block rsform-block-'.JFilterOutput::stringURLSafe($quickfield).'">'."\n";
 	$out.= "\t<label class=\"control-label\" for=\"".$quickfield."\">{".$quickfield.":caption}".$required."</label>\n";
 	$out.= "\t<div class=\"controls\">\n";
 	$out.= "\t{".$quickfield.":body}&nbsp;{".$quickfield.":validation}\n";
