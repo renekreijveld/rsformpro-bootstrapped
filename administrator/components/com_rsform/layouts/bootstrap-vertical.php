@@ -43,9 +43,7 @@ foreach ($quickfields as $quickfield)
 	}
 	
 	$required = in_array($quickfield, $requiredfields) ? ' '.(isset($this->_form->Required) ? $this->_form->Required : '(*)') : "";
-	if (strtolower(substr($quickfield,-7)) == "_hidden") {
-		$out.= "{".$quickfield.":body}\n";
-	} else {
+	if (strtolower(substr($quickfield,-7)) != "_hidden") {
 		$out.= "\t".'<div class="control-group rsform-block-'.JFilterOutput::stringURLSafe($quickfield).'">'."\n";
 		$out.= "\t<label class=\"control-label\" for=\"".$quickfield."\">{".$quickfield.":caption}".$required."</label>\n";
 		$out.= "\t<div class=\"controls\">\n";
@@ -53,6 +51,8 @@ foreach ($quickfields as $quickfield)
 		$out.= "\t<span class=\"help-block\">{".$quickfield.":description}</span>\n";
 		$out.= "\t</div>\n";
 		$out.= "\t</div>\n";
+	} else {
+		$out.= "{".$quickfield.":body}\n";
 	}
 }
 if (!empty($pagefields))
