@@ -2457,7 +2457,7 @@ class RSFormProHelper
 				$button_type = (isset($data['BUTTONTYPE']) && $data['BUTTONTYPE'] == 'TYPEBUTTON') ? 'button' : 'input';
 				$data['ADDITIONALATTRIBUTES2'] = $data['ADDITIONALATTRIBUTES'];
 				
-				$className = 'rsform-button';
+				$className = 'btn rsform-button';
 				if ($invalid)
 					$className .= ' rsform-error';
 				RSFormProHelper::addClass($data['ADDITIONALATTRIBUTES'], $className);
