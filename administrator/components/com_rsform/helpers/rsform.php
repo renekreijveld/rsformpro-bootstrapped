@@ -2404,16 +2404,8 @@ class RSFormProHelper
 					if (strpos($item, '[d]') !== false)
 						$additional .= 'disabled="disabled"';
 					
-					if ($data['FLOW']=='VERTICAL' && $layoutName == 'responsive')
-						$out .= '<p class="rsformVerticalClear">';
-					$out .= '<input '.$additional.' name="form['.$data['NAME'].']" type="radio" value="'.RSFormProHelper::htmlEscape($val).'" id="'.$data['NAME'].$i.'" '.$data['ADDITIONALATTRIBUTES'].' /><label for="'.$data['NAME'].$i.'">'.$txt.'</label>';
-					if ($data['FLOW']=='VERTICAL')
-					{
-						if ($layoutName == 'responsive')
-							$out .= '</p>';
-						else
-							$out .= '<br />';
-					}
+					$out .= '<label class="radio'.($data['FLOW']=='VERTICAL' ? '"' : ' inline"').'><input '.$additional.' name="form['.$data['NAME'].']" type="radio" value="'.RSFormProHelper::htmlEscape($val).'" id="'.$data['NAME'].$i.'" '.$data['ADDITIONALATTRIBUTES'].' />'.$txt.'</label>';
+
 					$i++;
 				}
 			break;
