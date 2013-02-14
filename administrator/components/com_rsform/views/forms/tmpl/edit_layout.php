@@ -24,7 +24,7 @@ defined('_JEXEC') or die('Restricted access');
 
 <fieldset>
 	<legend><?php echo JText::_('RSFP_XHTML_LAYOUTS'); ?></legend>
-	<?php $xhtmlLayouts = array('inline-xhtml', '2lines-xhtml', 'responsive'); ?>
+	<?php $xhtmlLayouts = array('inline-xhtml', '2lines-xhtml', 'responsive', 'bootstrap-horizontal', 'bootstrap-vertical'); ?>
 	<?php foreach ($xhtmlLayouts as $layout) { ?>
 	<div class="rsform_layout_box">
 		<label for="formLayout<?php echo ucfirst($layout); ?>">
