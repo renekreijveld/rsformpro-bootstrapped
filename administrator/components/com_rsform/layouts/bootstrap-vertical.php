@@ -47,8 +47,7 @@ foreach ($quickfields as $quickfield)
 		$out.= "\t".'<div class="control-group rsform-block-'.JFilterOutput::stringURLSafe($quickfield).'">'."\n";
 		$out.= "\t<label class=\"control-label\" for=\"".$quickfield."\">{".$quickfield.":caption}".$required."</label>\n";
 		$out.= "\t<div class=\"controls\">\n";
-		$out.= "\t{".$quickfield.":body}&nbsp;{".$quickfield.":validation}\n";
-		$out.= "\t<span class=\"help-block\">{".$quickfield.":description}</span>\n";
+		$out.= "\t{".$quickfield.":body}&nbsp;{".$quickfield.":validation}{".$quickfield.":description}\n";
 		$out.= "\t</div>\n";
 		$out.= "\t</div>\n";
 	} else {
@@ -58,6 +57,7 @@ foreach ($quickfields as $quickfield)
 if (!empty($pagefields))
 	$out .= "\t".'</div>'."\n";
 $out.= "</fieldset>\n";
+$out.="<script type=\"text/javascript\">jQuery(\"[rel=clickover]\").clickover({html: true});</script>";
 
 if ($out != $this->_form->FormLayout && $this->_form->FormId)
 {
