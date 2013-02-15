@@ -47,7 +47,7 @@ foreach ($quickfields as $quickfield)
 		$out.= "\t".'<div class="control-group rsform-block rsform-block-'.JFilterOutput::stringURLSafe($quickfield).'">'."\n";
 		$out.= "\t\t<label class=\"control-label\" for=\"".$quickfield."\">{".$quickfield.":caption}".$required."</label>\n";
 		$out.= "\t\t<div class=\"controls\">\n";
-		$out.= "\t\t\t{".$quickfield.":body}&nbsp;{".$quickfield.":validation}{".$quickfield.":description}\n";
+		$out.= "\t\t\t{".$quickfield.":body}&nbsp;{".$quickfield.":description} {".$quickfield.":validation}\n";
 		$out.= "\t\t</div>\n";
 		$out.= "\t</div>\n";
 	} else {
