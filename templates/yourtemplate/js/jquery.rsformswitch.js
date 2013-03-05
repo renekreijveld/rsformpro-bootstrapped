@@ -2,7 +2,7 @@
 
 (function(jQuery){
 	jQuery(document).ready(function() {
-		var SWidth = $(window).width();
+		var SWidth = jQuery(window).width();
 		if (SWidth < 766) {
 			jQuery("form#userForm").removeClass("form-horizontal");
 			jQuery("form#userForm").addClass("form-vertical");
