@@ -2926,7 +2926,7 @@ class RSFormProHelper
 					$out .= '<input type="submit" value="'.RSFormProHelper::htmlEscape($data['LABEL']).'" name="form['.$data['NAME'].']" id="'.$data['NAME'].'" '.$data['ADDITIONALATTRIBUTES'].' />';
 				if ($data['RESET']=='YES')
 				{
-					$className = 'rsform-reset-button';
+					$className = 'btn rsform-reset-button';
 					RSFormProHelper::addClass($data['ADDITIONALATTRIBUTES2'], $className);
 					
 					if ($button_type == 'button')
