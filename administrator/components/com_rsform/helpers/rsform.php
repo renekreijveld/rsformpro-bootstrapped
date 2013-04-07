@@ -2756,13 +2756,15 @@ class RSFormProHelper
 							$className .= ' rsform-error';
 						RSFormProHelper::addClass($data['ADDITIONALATTRIBUTES'], $className);
 						
+						$out .= '<div class="input-append">';
 						$out .= '<input id="txtcal'.$formId.'_'.$calendars[$componentId].'" name="form['.$data['NAME'].']" type="text" '.($data['READONLY'] == 'YES' ? 'readonly="readonly"' : '').'  value="'.RSFormProHelper::htmlEscape($defaultValue).'" '.$data['ADDITIONALATTRIBUTES'].'/>';
 						
-						$className = 'rsform-calendar-button';
+						$className = 'btn rsform-calendar-button';
 						if ($invalid)
 							$className .= ' rsform-error';
 						
-						$out .= '<input id="btn'.$formId.'_'.$calendars[$componentId].'" type="button" value="'.RSFormProHelper::htmlEscape($data['POPUPLABEL']).'" onclick="showHideCalendar(\'cal'.$formId.'_'.$calendars[$componentId].'Container\');" class="btnCal '.$className.'" '.$data['ADDITIONALATTRIBUTES2'].' />';
+						$out .= '<button id="btn'.$formId.'_'.$calendars[$componentId].'" type="button" onclick="showHideCalendar(\'cal'.$formId.'_'.$calendars[$componentId].'Container\');" class="btnCal '.$className.'" '.$data['ADDITIONALATTRIBUTES2'].' >'.RSFormProHelper::htmlEscape($data['POPUPLABEL']).'</button>';
+						$out .= '</div>';
 						$out .= '<div id="cal'.$formId.'_'.$calendars[$componentId].'Container" style="clear:both;display:none;position:absolute;z-index:'.(9999-$data['Order']).'"></div>';
 					break;
 				}
