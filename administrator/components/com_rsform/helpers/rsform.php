@@ -2961,7 +2961,7 @@ class RSFormProHelper
 				if (isset($data['VALIDATENEXTPAGE']) && $data['VALIDATENEXTPAGE'] == 'YES')
 					$validate = 'true';
 				
-				$className = 'rsform-button';
+				$className = 'btn rsform-button';
 				if ($invalid)
 					$className .= ' rsform-error';
 				RSFormProHelper::addClass($data['ADDITIONALATTRIBUTES'], $className);
