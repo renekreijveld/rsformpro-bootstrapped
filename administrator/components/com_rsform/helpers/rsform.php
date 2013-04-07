@@ -1706,6 +1706,16 @@ class RSFormProHelper
 				$mainframe->registerEvent('onAfterRender', '_modifyResponsiveTemplate');
 			}
 		}
+
+		if ($form->FormLayoutName == 'bootstrap-horizontal')
+		{
+			$form->CSSClass .= ' form-horizontal';
+		}
+		
+		if ($form->FormLayoutName == 'bootstrap-vertical')
+		{
+			$form->CSSClass .= ' form-vertical';
+		}
 		
 		$CSSClass 	= $form->CSSClass ? ' class="'.RSFormProHelper::htmlEscape(trim($form->CSSClass)).'"' : '';
 		$CSSId 		= $form->CSSId ? ' id="'.RSFormProHelper::htmlEscape(trim($form->CSSId)).'"' : '';
