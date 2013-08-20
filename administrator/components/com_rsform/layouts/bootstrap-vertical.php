@@ -9,7 +9,12 @@
 // no direct access
 defined( '_JEXEC' ) or die( 'Restricted access' );
 
-$out = '<h2>{global:formtitle}</h2>'."\n";
+$out = '';
+
+if ($this->_form->ShowFormTitle) {
+	$out.='<h2>{global:formtitle}</h2>'."\n";
+}
+
 $out.='{error}'."\n";
 $out.='<fieldset>'."\n";
 
