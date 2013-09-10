@@ -1702,8 +1702,14 @@ class RSFormProHelper
 			$description = '';
 			if (isset($data['SHOW']) && $data['SHOW'] == 'NO')
 				$description = '';
+				
 			elseif (isset($data['DESCRIPTION']))
-				$description = $data['DESCRIPTION'];
+				$descrtmp = $data['DESCRIPTION'];
+				if (trim($descrtmp) != '') {
+					$description = '<a data-placement="top" rel="clickover" data-original-title="info" data-content="'.$descrtmp.'" class="btn btn-small btn-link">info</a>';
+				} else {
+					$description = '';
+				}
 			$replace[] = $description;
 			
 			// Validation message
