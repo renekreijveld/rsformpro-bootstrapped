@@ -3042,7 +3042,7 @@ class RSFormProHelper
 				$out .= '<input type="image" src="'.RSFormProHelper::htmlEscape($data['IMAGEBUTTON']).'" name="form['.$data['NAME'].']" id="'.$data['NAME'].'" '.$data['ADDITIONALATTRIBUTES2'].' />';
 				if ($data['RESET']=='YES')
 				{
-					$className = 'rsform-reset-button';
+					$className = 'btn rsform-reset-button';
 					RSFormProHelper::addClass($data['ADDITIONALATTRIBUTES2'], $className);
 					
 					$out .= '<input type="reset" name="" id="reset_'.$data['NAME'].'" style="display: none !important" />&nbsp;&nbsp;<input onclick="document.getElementById(\'reset_'.$data['NAME'].'\').click();return false;" type="image" src="'.RSFormProHelper::htmlEscape($data['IMAGERESET']).'" name="form['.$data['NAME'].']" '.$data['ADDITIONALATTRIBUTES2'].' />';
