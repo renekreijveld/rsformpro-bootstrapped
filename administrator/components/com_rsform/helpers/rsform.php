@@ -2821,7 +2821,7 @@ class RSFormProHelper
 					
 					if ($data['FLOW']=='VERTICAL' && $layoutName == 'responsive')
 						$out .= '<p class="rsformVerticalClear">';
-					$out .= '<input '.$additional.' name="form['.$data['NAME'].'][]" type="checkbox" value="'.RSFormProHelper::htmlEscape($val).'" id="'.$data['NAME'].$i.'" '.$data['ADDITIONALATTRIBUTES'].' /><label for="'.$data['NAME'].$i.'">'.$txt.'</label>';
+					$out .= '<label class="checkbox'.($data['FLOW']=='VERTICAL' ? '"' : ' inline"').' for="'.$data['NAME'].$i.'"><input '.$additional.' name="form['.$data['NAME'].'][]" type="checkbox" value="'.RSFormProHelper::htmlEscape($val).'" id="'.$data['NAME'].$i.'" '.$data['ADDITIONALATTRIBUTES'].' />'.$txt.'</label>';
 					
 					if ($hasPrice) {
 						$prices[$val] = $price;
