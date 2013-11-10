@@ -1,7 +1,7 @@
 ﻿RSForm Pro Bootstrapped
 =================
 
-Although RSForms Pro comes with a HTML5 Responsive layout it lacks the Bootstrap Layout. RSForm Pro Bootstrapped provides the Bootstrap Layout.
+Although RSForms Pro comes with a HTML5 Responsive layout it lacks the Bootstrap Layout. RSForm Pro Bootstrapped provides the Bootstrap Layout for Bootstrap 2.
 
 
 Quick Start
@@ -22,7 +22,6 @@ What this does is it changes the class of the form.<br/>
 Tooltips by Bootstrapx Clickover
 -----------
 For the tooltip I've implemented Bootstrapx Clickover. It provides enhancements to Twitter Bootstrap Popovers to allow popovers to be opened/closed with click events and some other niceities. You can download and install the necessary files from https://github.com/lecar-red/bootstrapx-clickover
-
 
 Hope you get it all working!
 
