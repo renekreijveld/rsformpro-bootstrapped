@@ -682,7 +682,7 @@ class RSFormProHelper
 						$additional .= 'disabled="disabled"';
 					
 					$out.='<input type="checkbox" '.$additional.' value="'.RSFormProHelper::htmlEscape($val).'" id="'.$data['NAME'].$i.'"/><label for="'.$data['NAME'].$i.'">'.$txt.'</label>';
-					if($data['FLOW']=='VERTICAL') $out.='<br/>';
+					//if($data['FLOW']=='VERTICAL') $out.='<br/>';
 					$i++;
 				}
 				$out.='</td>';
@@ -720,7 +720,7 @@ class RSFormProHelper
 						$additional .= 'disabled="disabled"';
 					
 					$out.='<input type="radio" '.$additional.' value="'.RSFormProHelper::htmlEscape($val).'" id="'.$data['NAME'].$i.'"/><label for="'.$data['NAME'].$i.'">'.$txt.'</label>';
-					if ($data['FLOW']=='VERTICAL') $out.='<br/>';
+					//if ($data['FLOW']=='VERTICAL') $out.='<br/>';
 					$i++;
 				}
 				$out.='</td>';
@@ -2831,8 +2831,8 @@ class RSFormProHelper
 					{
 						if ($layoutName == 'responsive')
 							$out .= '</p>';
-						else
-							$out .= '<br />';
+						//else
+							//$out .= '<br />';
 					}	
 					$i++;
 				}
@@ -2879,8 +2879,8 @@ class RSFormProHelper
 					{
 						if ($layoutName == 'responsive')
 							$out .= '</p>';
-						else
-							$out .= '<br />';
+						//else
+							//$out .= '<br />';
 					}
 					$i++;
 				}
@@ -2967,8 +2967,8 @@ class RSFormProHelper
 						RSFormProHelper::addClass($data['ADDITIONALATTRIBUTES'], $className);
 				
 						$out .= '<img src="'.JRoute::_('index.php?option=com_rsform&amp;task=captcha&amp;componentId='.$componentId.'&amp;tmpl=component&amp;sid='.mt_rand()).'" id="captcha'.$componentId.'" alt="'.RSFormProHelper::htmlEscape($data['CAPTION']).' "/>';
-						if ($data['FLOW'] == 'VERTICAL')
-							$out .= '<br />';
+						//if ($data['FLOW'] == 'VERTICAL')
+							//$out .= '<br />';
 						$out .= '<input type="text" name="form['.$data['NAME'].']" value="" id="captchaTxt'.$componentId.'" '.$data['ADDITIONALATTRIBUTES'].' />';
 						if ($data['SHOWREFRESH']=='YES')
 							$out .= '&nbsp;&nbsp;<a href="javascript:void(0)" onclick="refreshCaptcha('.$componentId.',\''.JRoute::_('index.php?option=com_rsform&task=captcha&componentId='.$componentId.'&tmpl=component').'\'); return false;">'.$data['REFRESHTEXT'].'</a>';
