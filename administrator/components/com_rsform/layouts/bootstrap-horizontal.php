@@ -69,9 +69,8 @@ if ($out != $this->_form->FormLayout && $this->_form->FormId)
 	// Clean it
 	// Update the layout
 	$db = JFactory::getDBO();
-	$db->setQuery("UPDATE #__rsform_forms SET FormLayout='".$db->getEscaped($out)."' WHERE FormId=".$this->_form->FormId);
+	$db->setQuery("UPDATE #__rsform_forms SET FormLayout='".$db->escape($out)."' WHERE FormId=".$this->_form->FormId);
 	$db->query();
 }
 
 return $out;
-?>
